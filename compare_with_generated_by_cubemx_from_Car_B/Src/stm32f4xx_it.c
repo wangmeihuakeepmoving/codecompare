@@ -36,12 +36,28 @@
 #include "stm32f4xx_it.h"
 
 /* USER CODE BEGIN 0 */
+#include "dbus.h"
+#include "usart.h"
+#include "sdbus.h"
+#include "dbus.h"
+#include "gimbal_control.h"
+#include "test_usart.h"
+#include "test_can1.h"
+
+extern uint8_t recv_end_flag;
 
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
+extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim6;
+extern DMA_HandleTypeDef hdma_usart1_rx;
+extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart3;
+extern UART_HandleTypeDef huart6;
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
@@ -186,6 +202,20 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
+* @brief This function handles EXTI line1 interrupt.
+*/
+void EXTI1_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI1_IRQn 0 */
+
+  /* USER CODE END EXTI1_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
+  /* USER CODE BEGIN EXTI1_IRQn 1 */
+
+  /* USER CODE END EXTI1_IRQn 1 */
+}
+
+/**
 * @brief This function handles CAN1 TX interrupts.
 */
 void CAN1_TX_IRQHandler(void)
@@ -205,12 +235,136 @@ void CAN1_TX_IRQHandler(void)
 void CAN1_RX0_IRQHandler(void)
 {
   /* USER CODE BEGIN CAN1_RX0_IRQn 0 */
-
-  /* USER CODE END CAN1_RX0_IRQn 0 */
+  can2_tx_success_flag=1;
+  //printf("it_can1 data!\n");
+	/* USER CODE END CAN1_RX0_IRQn 0 */
   HAL_CAN_IRQHandler(&hcan1);
   /* USER CODE BEGIN CAN1_RX0_IRQn 1 */
-
+	
   /* USER CODE END CAN1_RX0_IRQn 1 */
+}
+
+/**
+* @brief This function handles CAN2 SCE interrupt.
+*/
+void CAN2_SCE_IRQHandler(void)
+{
+  /* USER CODE BEGIN CAN2_SCE_IRQn 0 */
+
+  /* USER CODE END CAN2_SCE_IRQn 0 */
+  HAL_CAN_IRQHandler(&hcan2);
+  /* USER CODE BEGIN CAN2_SCE_IRQn 1 */
+
+  /* USER CODE END CAN2_SCE_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM3 global interrupt.
+*/
+void TIM3_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM3_IRQn 0 */
+
+  /* USER CODE END TIM3_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim3);
+  /* USER CODE BEGIN TIM3_IRQn 1 */
+
+  /* USER CODE END TIM3_IRQn 1 */
+}
+
+/**
+* @brief This function handles USART1 global interrupt.
+*/
+void USART1_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART1_IRQn 0 */
+  uint32_t tmp_flag = 0;
+  tmp_flag =  __HAL_UART_GET_FLAG(&huart1,UART_FLAG_IDLE); 
+	if((tmp_flag != RESET))
+  { 
+			__HAL_UART_CLEAR_IDLEFLAG(&huart1);
+			HAL_UART_DMAStop(&huart1);
+		  recv_end_flag = 1;
+  }
+	DBUS_Dec(&dbus,dbus_buf);
+	SDState_Set(dbus.key.v);
+	if(SDFlag==0)
+	{
+		Trigger_Control(dbus.mouse.x,dbus.mouse.y,dbus.rc.ch3);
+  }
+	if(SDFlag==1)
+	{
+	if (dbus.mouse.y>3) {pitch.targetAngle += -15;}
+	if (dbus.mouse.y<-3) {pitch.targetAngle += 15;}
+		pitch.targetAngle += (dbus.rc.ch3-1024)/33;
+	}
+  /* USER CODE END USART1_IRQn 0 */
+  //HAL_UART_IRQHandler(&huart1);
+  /* USER CODE BEGIN USART1_IRQn 1 */
+
+  /* USER CODE END USART1_IRQn 1 */
+}
+
+/**
+* @brief This function handles USART2 global interrupt.
+*/
+void USART2_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART2_IRQn 0 */
+
+  /* USER CODE END USART2_IRQn 0 */
+  HAL_UART_IRQHandler(&huart2);
+  /* USER CODE BEGIN USART2_IRQn 1 */
+
+  /* USER CODE END USART2_IRQn 1 */
+}
+
+/**
+* @brief This function handles USART3 global interrupt.
+*/
+void USART3_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART3_IRQn 0 */
+
+  /* USER CODE END USART3_IRQn 0 */
+  HAL_UART_IRQHandler(&huart3);
+  /* USER CODE BEGIN USART3_IRQn 1 */
+
+  /* USER CODE END USART3_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM6 global interrupt, DAC1 and DAC2 underrun error interrupts.
+*/
+void TIM6_DAC_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM6_DAC_IRQn 0 */
+
+  /* USER CODE END TIM6_DAC_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim6);
+  /* USER CODE BEGIN TIM6_DAC_IRQn 1 */
+  if (HAL_TIM_Base_GetState(&htim6)!= RESET) 
+	{
+ //       TIM_ClearITPendingBit(TIM6,TIM_IT_Update);
+ //       TIM_ClearFlag(TIM6, TIM_FLAG_Update);	
+        Gimbal_Control();	
+	//	LED_RED_TOGGLE();
+    }
+  /* USER CODE END TIM6_DAC_IRQn 1 */
+}
+
+/**
+* @brief This function handles DMA2 stream2 global interrupt.
+*/
+void DMA2_Stream2_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA2_Stream2_IRQn 0 */
+
+  /* USER CODE END DMA2_Stream2_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_usart1_rx);
+  /* USER CODE BEGIN DMA2_Stream2_IRQn 1 */
+
+  /* USER CODE END DMA2_Stream2_IRQn 1 */
 }
 
 /**
@@ -233,12 +387,26 @@ void CAN2_TX_IRQHandler(void)
 void CAN2_RX0_IRQHandler(void)
 {
   /* USER CODE BEGIN CAN2_RX0_IRQn 0 */
-
+  //printf("it_can2 data!\n");
   /* USER CODE END CAN2_RX0_IRQn 0 */
   HAL_CAN_IRQHandler(&hcan2);
   /* USER CODE BEGIN CAN2_RX0_IRQn 1 */
-
+  //printf("it_can2 data!\n");
   /* USER CODE END CAN2_RX0_IRQn 1 */
+}
+
+/**
+* @brief This function handles USART6 global interrupt.
+*/
+void USART6_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART6_IRQn 0 */
+
+  /* USER CODE END USART6_IRQn 0 */
+  HAL_UART_IRQHandler(&huart6);
+  /* USER CODE BEGIN USART6_IRQn 1 */
+
+  /* USER CODE END USART6_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

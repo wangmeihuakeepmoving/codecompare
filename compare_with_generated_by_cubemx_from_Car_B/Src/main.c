@@ -3,11 +3,6 @@
   * File Name          : main.c
   * Description        : Main program body
   ******************************************************************************
-  ** This notice applies to any and all portions of this file
-  * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
-  * inserted by the user or by software development tools
-  * are owned by their respective copyright owners.
   *
   * COPYRIGHT(c) 2017 STMicroelectronics
   *
@@ -38,15 +33,36 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
+#include "can.h"
+#include "dma.h"
+#include "i2c.h"
+#include "spi.h"
+#include "tim.h"
+#include "usart.h"
+#include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "stdio.h"
+#include "delay.h"
+#include "led.h"
+#include "laser.h"
+#include "dbus.h"
+#include "sdbus.h"
+#include "pid_algorithm.h"
+#include "chassis_control.h"
+#include "gimbal_control.h"
+#include "test_imu.h"
+#include "shoot_control.h"
+#include "encoder.h"
+#include "initialization.h"
+#include "i2c_mpu6050.h"
+#include "test_usart.h"
+#include "test_can1.h"
+#include "test_can2.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
-CAN_HandleTypeDef hcan1;
-CAN_HandleTypeDef hcan2;
-
+uint8_t recv_end_flag=0;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
@@ -54,9 +70,7 @@ CAN_HandleTypeDef hcan2;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_CAN1_Init(void);
-static void MX_CAN2_Init(void);
+void Error_Handler(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -65,13 +79,24 @@ static void MX_CAN2_Init(void);
 
 /* USER CODE BEGIN 0 */
 
+//重新定向printf()函数对应的串口
+#ifdef __GNUC__
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif 
+PUTCHAR_PROTOTYPE
+{
+HAL_UART_Transmit(&huart6 , (uint8_t *)&ch, 1, 0xFFFF);
+return ch;
+}
+
 /* USER CODE END 0 */
 
 int main(void)
 {
-
+  //printf("start!");
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -79,35 +104,81 @@ int main(void)
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
   /* Configure the system clock */
   SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_CAN1_Init();
   MX_CAN2_Init();
+  MX_SPI5_Init();
+  MX_TIM2_Init();
+  MX_TIM3_Init();
+  MX_TIM4_Init();
+  MX_TIM5_Init();
+  MX_TIM6_Init();
+  MX_TIM8_Init();
+  MX_TIM12_Init();
+  MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
+  MX_USART3_UART_Init();
+  MX_USART6_UART_Init();
+  MX_I2C2_Init();
 
   /* USER CODE BEGIN 2 */
-
+	HAL_TIM_PWM_Start(&htim12, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim12, TIM_CHANNEL_2);
+	__HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE);
+	HAL_UART_Receive_IT(&huart3, uart3_rx_buff, 1);
+  HAL_UART_Receive_IT(&huart6, uart6_rx_buff, 1);
+  delay_ms(1);
+	
+	CanFilter_Init(&hcan1);
+	CanFilter_Init(&hcan2);
+  if (HAL_CAN_Receive_IT(&hcan1, CAN_FIFO0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+	else printf("hcan1 OK!\n");
+	delay_ms(10);
+	Initialization();   	
+	delay_ms(2000);
   /* USER CODE END 2 */
-
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
   /* USER CODE END WHILE */
-
+  
   /* USER CODE BEGIN 3 */
-
-  }
+	if(recv_end_flag ==1)
+	{
+//		printf("%d ",dbus.rc.ch0);
+//		printf("%d ",dbus.rc.ch1);
+//		printf("%d ",dbus.rc.ch2);
+//  	printf("%d\n",dbus.rc.ch3);
+//		printf("%d ",dbus.rc.s1);
+//		printf("%d\r\n",dbus.rc.s2);
+//		recv_end_flag=0;
+	}
+	//printf("main-%d --",yaw.thisAngle);
+	//printf("-%d \n",pitch.thisAngle);
+	HAL_UART_Receive_DMA(&huart1,dbus_buf,DBUS_BUF_SIZE);
+					if(DBUS_Det(dbus))//rc开启判断
+			{
+				if(dbus.mouse.x>3){
+				dbus.rc.ch2=dbus.rc.ch2+20;
+				}
+				if(dbus.mouse.x<-3){
+				dbus.rc.ch2=dbus.rc.ch2-20;
+				}
+				move_control(dbus.rc.ch0, dbus.rc.ch1, dbus.rc.ch2, dbus.rc.s1, dbus.key.v,0);
+			  BLDC_control(dbus.rc.s2, dbus.mouse.r);
+			  Fire(dbus.rc.s2,dbus.mouse.l);				
+			}
+	}
   /* USER CODE END 3 */
 
 }
@@ -138,7 +209,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
-    _Error_Handler(__FILE__, __LINE__);
+    Error_Handler();
   }
 
     /**Initializes the CPU, AHB and APB busses clocks 
@@ -152,7 +223,7 @@ void SystemClock_Config(void)
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
-    _Error_Handler(__FILE__, __LINE__);
+    Error_Handler();
   }
 
     /**Configure the Systick interrupt time 
@@ -167,116 +238,6 @@ void SystemClock_Config(void)
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
-/* CAN1 init function */
-static void MX_CAN1_Init(void)
-{
-
-  hcan1.Instance = CAN1;
-  hcan1.Init.Prescaler = 3;
-  hcan1.Init.Mode = CAN_MODE_LOOPBACK;
-  hcan1.Init.SJW = CAN_SJW_1TQ;
-  hcan1.Init.BS1 = CAN_BS1_9TQ;
-  hcan1.Init.BS2 = CAN_BS2_4TQ;
-  hcan1.Init.TTCM = DISABLE;
-  hcan1.Init.ABOM = DISABLE;
-  hcan1.Init.AWUM = DISABLE;
-  hcan1.Init.NART = DISABLE;
-  hcan1.Init.RFLM = DISABLE;
-  hcan1.Init.TXFP = ENABLE;
-  if (HAL_CAN_Init(&hcan1) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-}
-
-/* CAN2 init function */
-static void MX_CAN2_Init(void)
-{
-
-  hcan2.Instance = CAN2;
-  hcan2.Init.Prescaler = 3;
-  hcan2.Init.Mode = CAN_MODE_LOOPBACK;
-  hcan2.Init.SJW = CAN_SJW_1TQ;
-  hcan2.Init.BS1 = CAN_BS1_9TQ;
-  hcan2.Init.BS2 = CAN_BS2_4TQ;
-  hcan2.Init.TTCM = DISABLE;
-  hcan2.Init.ABOM = DISABLE;
-  hcan2.Init.AWUM = DISABLE;
-  hcan2.Init.NART = DISABLE;
-  hcan2.Init.RFLM = DISABLE;
-  hcan2.Init.TXFP = ENABLE;
-  if (HAL_CAN_Init(&hcan2) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-}
-
-/** Configure pins as 
-        * Analog 
-        * Input 
-        * Output
-        * EVENT_OUT
-        * EXTI
-*/
-static void MX_GPIO_Init(void)
-{
-
-  GPIO_InitTypeDef GPIO_InitStruct;
-
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOG_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOF_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, IST_INT_Pin|IST_RST_Pin|LED_RED_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LASER_GPIO_Port, LASER_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_6|LED_GREEN_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pins : IST_INT_Pin IST_RST_Pin LED_RED_Pin */
-  GPIO_InitStruct.Pin = IST_INT_Pin|IST_RST_Pin|LED_RED_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PE1 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : LASER_Pin */
-  GPIO_InitStruct.Pin = LASER_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LASER_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PF6 LED_GREEN_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_6|LED_GREEN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : KEY_Pin */
-  GPIO_InitStruct.Pin = KEY_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(KEY_GPIO_Port, &GPIO_InitStruct);
-
-}
-
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
@@ -286,14 +247,14 @@ static void MX_GPIO_Init(void)
   * @param  None
   * @retval None
   */
-void _Error_Handler(char * file, int line)
+void Error_Handler(void)
 {
-  /* USER CODE BEGIN Error_Handler_Debug */
+  /* USER CODE BEGIN Error_Handler */
   /* User can add his own implementation to report the HAL error return state */
   while(1) 
   {
   }
-  /* USER CODE END Error_Handler_Debug */ 
+  /* USER CODE END Error_Handler */ 
 }
 
 #ifdef USE_FULL_ASSERT

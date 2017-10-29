@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32f4xx_hal_dfsdm.c
   * @author  MCD Application Team
-  * @version V1.7.1
-  * @date    14-April-2017
+  * @version V1.6.0
+  * @date    04-November-2016
   * @brief   This file provides firmware functions to manage the following 
   *          functionalities of the Digital Filter for Sigma-Delta Modulators
   *          (DFSDM) peripherals:
@@ -161,7 +161,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2016 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -234,17 +234,10 @@
 #if defined (DFSDM2_Channel0)
 #define DFSDM2_CHANNEL_NUMBER           8U
 #endif /* DFSDM2_Channel0 */
-
 /**
   * @}
   */
-/** @addtogroup DFSDM_Private_Macros 
-* @{
-*/
 
-/**
-  * @}
-  */
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /** @defgroup DFSDM_Private_Variables DFSDM Private Variables
@@ -276,7 +269,6 @@ static void     DFSDM_DMARegularConvCplt(DMA_HandleTypeDef *hdma);
 static void     DFSDM_DMAInjectedHalfConvCplt(DMA_HandleTypeDef *hdma);
 static void     DFSDM_DMAInjectedConvCplt(DMA_HandleTypeDef *hdma);
 static void     DFSDM_DMAError(DMA_HandleTypeDef *hdma);
-
 /**
   * @}
   */
@@ -2140,7 +2132,7 @@ int32_t HAL_DFSDM_FilterGetRegularValue(DFSDM_Filter_HandleTypeDef *hdfsdm_filte
                                         uint32_t                   *Channel)
 {
   uint32_t reg = 0U;
-  int32_t  value = 0;
+  int32_t  value = 0U;
   
   /* Check parameters */
   assert_param(IS_DFSDM_FILTER_ALL_INSTANCE(hdfsdm_filter->Instance));
@@ -2151,7 +2143,7 @@ int32_t HAL_DFSDM_FilterGetRegularValue(DFSDM_Filter_HandleTypeDef *hdfsdm_filte
   
   /* Extract channel and regular conversion value */
   *Channel = (reg & DFSDM_FLTRDATAR_RDATACH);
-  value = ((int32_t)(reg & DFSDM_FLTRDATAR_RDATA) >> DFSDM_FLTRDATAR_DATA_OFFSET);
+  value = ((reg & DFSDM_FLTRDATAR_RDATA) >> DFSDM_FLTRDATAR_DATA_OFFSET);
 
   /* return regular conversion value */
   return value;
@@ -2550,7 +2542,7 @@ int32_t HAL_DFSDM_FilterGetInjectedValue(DFSDM_Filter_HandleTypeDef *hdfsdm_filt
                                          uint32_t                   *Channel)
 {
   uint32_t reg = 0U;
-  int32_t  value = 0;
+  int32_t  value = 0U;
   
   /* Check parameters */
   assert_param(IS_DFSDM_FILTER_ALL_INSTANCE(hdfsdm_filter->Instance));
@@ -2561,7 +2553,7 @@ int32_t HAL_DFSDM_FilterGetInjectedValue(DFSDM_Filter_HandleTypeDef *hdfsdm_filt
   
   /* Extract channel and injected conversion value */
   *Channel = (reg & DFSDM_FLTJDATAR_JDATACH);
-  value = ((int32_t)(reg & DFSDM_FLTJDATAR_JDATA) >> DFSDM_FLTJDATAR_DATA_OFFSET);
+  value = ((reg & DFSDM_FLTJDATAR_JDATA) >> DFSDM_FLTJDATAR_DATA_OFFSET);
 
   /* return regular conversion value */
   return value;
@@ -2735,7 +2727,7 @@ int32_t HAL_DFSDM_FilterGetExdMaxValue(DFSDM_Filter_HandleTypeDef *hdfsdm_filter
                                        uint32_t                   *Channel)
 {
   uint32_t reg = 0U;
-  int32_t  value = 0;
+  int32_t  value = 0U;
   
   /* Check parameters */
   assert_param(IS_DFSDM_FILTER_ALL_INSTANCE(hdfsdm_filter->Instance));
@@ -2746,7 +2738,7 @@ int32_t HAL_DFSDM_FilterGetExdMaxValue(DFSDM_Filter_HandleTypeDef *hdfsdm_filter
   
   /* Extract channel and extreme detector maximum value */
   *Channel = (reg & DFSDM_FLTEXMAX_EXMAXCH);
-  value = ((int32_t)(reg & DFSDM_FLTEXMAX_EXMAX) >> DFSDM_FLTEXMAX_DATA_OFFSET);
+  value = ((reg & DFSDM_FLTEXMAX_EXMAX) >> DFSDM_FLTEXMAX_DATA_OFFSET);
 
   /* return extreme detector maximum value */
   return value;
@@ -2763,7 +2755,7 @@ int32_t HAL_DFSDM_FilterGetExdMinValue(DFSDM_Filter_HandleTypeDef *hdfsdm_filter
                                        uint32_t                   *Channel)
 {
   uint32_t reg = 0U;
-  int32_t  value = 0;
+  int32_t  value = 0U;
   
   /* Check parameters */
   assert_param(IS_DFSDM_FILTER_ALL_INSTANCE(hdfsdm_filter->Instance));
@@ -2774,7 +2766,7 @@ int32_t HAL_DFSDM_FilterGetExdMinValue(DFSDM_Filter_HandleTypeDef *hdfsdm_filter
   
   /* Extract channel and extreme detector minimum value */
   *Channel = (reg & DFSDM_FLTEXMIN_EXMINCH);
-  value = ((int32_t)(reg & DFSDM_FLTEXMIN_EXMIN) >> DFSDM_FLTEXMIN_DATA_OFFSET);
+  value = ((reg & DFSDM_FLTEXMIN_EXMIN) >> DFSDM_FLTEXMIN_DATA_OFFSET);
 
   /* return extreme detector minimum value */
   return value;
@@ -3160,7 +3152,7 @@ uint32_t HAL_DFSDM_FilterGetError(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
  *
 @verbatim
   ==============================================================================
-                     ##### Filter MultiChannel operation functions #####
+                     ##### Filter state functions #####
   ==============================================================================
     [..]  This section provides functions allowing to:
       (+) Control the DFSDM Multi channel delay block
@@ -3170,8 +3162,7 @@ uint32_t HAL_DFSDM_FilterGetError(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
 #if defined(SYSCFG_MCHDLYCR_BSCKSEL)
 /**
   * @brief  Select the DFSDM2 as clock source for the bitstream clock.
-  * @note   The SYSCFG clock marco __HAL_RCC_SYSCFG_CLK_ENABLE() must be called 
-  *         before HAL_DFSDM_BitstreamClock_Start()  
+  * @retval None
   */
 void HAL_DFSDM_BitstreamClock_Start(void)
 {
@@ -3185,13 +3176,11 @@ void HAL_DFSDM_BitstreamClock_Start(void)
 
 /**
   * @brief Stop the DFSDM2 as clock source for the bitstream clock.
-  * @note   The SYSCFG clock marco __HAL_RCC_SYSCFG_CLK_ENABLE() must be called 
-  *         before HAL_DFSDM_BitstreamClock_Stop()     
   * @retval None
   */
 void HAL_DFSDM_BitstreamClock_Stop(void)
 {
-  uint32_t tmp = 0U; 
+  uint32_t tmp = 0; 
   
   tmp = SYSCFG->MCHDLYCR;
   tmp = (tmp &(~SYSCFG_MCHDLYCR_BSCKSEL));
@@ -3203,13 +3192,11 @@ void HAL_DFSDM_BitstreamClock_Stop(void)
   * @brief  Disable Delay Clock for DFSDM1/2.
   * @param MCHDLY: HAL_MCHDLY_CLOCK_DFSDM2.
   *                HAL_MCHDLY_CLOCK_DFSDM1.
-  * @note   The SYSCFG clock marco __HAL_RCC_SYSCFG_CLK_ENABLE() must be called 
-  *         before HAL_DFSDM_DisableDelayClock()     
   * @retval None
   */
 void HAL_DFSDM_DisableDelayClock(uint32_t MCHDLY)
 {
-  uint32_t tmp = 0U; 
+  uint32_t tmp = 0; 
   
   assert_param(IS_DFSDM_DELAY_CLOCK(MCHDLY));
   
@@ -3229,14 +3216,12 @@ void HAL_DFSDM_DisableDelayClock(uint32_t MCHDLY)
 /**
   * @brief  Enable Delay Clock for DFSDM1/2.
   * @param MCHDLY: HAL_MCHDLY_CLOCK_DFSDM2.
-  *                HAL_MCHDLY_CLOCK_DFSDM1.    
-  * @note   The SYSCFG clock marco __HAL_RCC_SYSCFG_CLK_ENABLE() must be called 
-  *         before HAL_DFSDM_EnableDelayClock()       
+  *                HAL_MCHDLY_CLOCK_DFSDM1.         
   * @retval None
   */
 void HAL_DFSDM_EnableDelayClock(uint32_t MCHDLY)
 {
-  uint32_t tmp = 0U; 
+  uint32_t tmp = 0; 
 
   assert_param(IS_DFSDM_DELAY_CLOCK(MCHDLY));
 
@@ -3248,27 +3233,26 @@ void HAL_DFSDM_EnableDelayClock(uint32_t MCHDLY)
 
 /**
   * @brief  Select the source for CKin signals for DFSDM1/2.
-  * @param source: DFSDM2_CKIN_PAD.
-  *                DFSDM2_CKIN_DM. 
-  *                DFSDM1_CKIN_PAD.
-  *                DFSDM1_CKIN_DM.            
+  * @param source: HAL_DFSDM2_CKIN_PAD.
+  *                HAL_DFSDM2_CKIN_DM. 
+  *                HAL_DFSDM1_CKIN_PAD.
+  *                HAL_DFSDM1_CKIN_DM.            
   * @retval None
   */
 void HAL_DFSDM_ClockIn_SourceSelection(uint32_t source)
 {
-  uint32_t tmp = 0U; 
+  uint32_t tmp = 0; 
   
   assert_param(IS_DFSDM_CLOCKIN_SELECTION(source));
 
   tmp = SYSCFG->MCHDLYCR;
-  
   if((source == HAL_DFSDM2_CKIN_PAD) || (source == HAL_DFSDM2_CKIN_DM))
   {
     tmp =  (tmp & ~SYSCFG_MCHDLYCR_DFSDM2CFG);
     
     if(source == HAL_DFSDM2_CKIN_PAD) 
     {
-      source = 0x000000U;
+      source = 0x000000;
     }
   }
   else
@@ -3281,15 +3265,15 @@ void HAL_DFSDM_ClockIn_SourceSelection(uint32_t source)
 
 /**
   * @brief  Select the source for CKOut signals for DFSDM1/2.
-  * @param source: DFSDM2_CKOUT_DFSDM2.
-  *                DFSDM2_CKOUT_M27. 
-  *                DFSDM1_CKOUT_DFSDM1.
-  *                DFSDM1_CKOUT_M27.            
+  * @param source: HAL_DFSDM2_CKOUT_DFSDM2.
+  *                HAL_DFSDM2_CKOUT_M27. 
+  *                HAL_DFSDM1_CKOUT_DFSDM1.
+  *                HAL_DFSDM1_CKOUT_M27.            
   * @retval None
   */
 void HAL_DFSDM_ClockOut_SourceSelection(uint32_t source)
 {
-  uint32_t tmp = 0U; 
+  uint32_t tmp = 0; 
   
   assert_param(IS_DFSDM_CLOCKOUT_SELECTION(source));
   
@@ -3301,7 +3285,7 @@ void HAL_DFSDM_ClockOut_SourceSelection(uint32_t source)
     
     if(source == HAL_DFSDM2_CKOUT_DFSDM2)
     {
-      source = 0x000U;
+      source = 0x000;
     }
   }
   else
@@ -3314,15 +3298,15 @@ void HAL_DFSDM_ClockOut_SourceSelection(uint32_t source)
 
 /**
   * @brief  Select the source for DataIn0 signals for DFSDM1/2.
-  * @param source: DATAIN0_DFSDM2_PAD.
-  *                DATAIN0_DFSDM2_DATAIN1. 
-  *                DATAIN0_DFSDM1_PAD.
-  *                DATAIN0_DFSDM1_DATAIN1.                  
+  * @param source: HAL_DATAIN0_DFSDM2_PAD.
+  *                HAL_DATAIN0_DFSDM2_DATAIN1. 
+  *                HAL_DATAIN0_DFSDM1_PAD.
+  *                HAL_DATAIN0_DFSDM1_DATAIN1.                  
   * @retval None
   */
 void HAL_DFSDM_DataIn0_SourceSelection(uint32_t source)
 {
-  uint32_t tmp = 0U; 
+  uint32_t tmp = 0; 
 
   assert_param(IS_DFSDM_DATAIN0_SRC_SELECTION(source));
 
@@ -3333,7 +3317,7 @@ void HAL_DFSDM_DataIn0_SourceSelection(uint32_t source)
     tmp =  (tmp & ~SYSCFG_MCHDLYCR_DFSDM2D0SEL);
     if(source == HAL_DATAIN0_DFSDM2_PAD)
     {
-      source = 0x00000U;
+      source = 0x00000;
     }
   }
   else
@@ -3345,15 +3329,15 @@ void HAL_DFSDM_DataIn0_SourceSelection(uint32_t source)
 
 /**
   * @brief  Select the source for DataIn2 signals for DFSDM1/2.
-  * @param source: DATAIN2_DFSDM2_PAD.
-  *                DATAIN2_DFSDM2_DATAIN3. 
-  *                DATAIN2_DFSDM1_PAD.
-  *                DATAIN2_DFSDM1_DATAIN3.                  
+  * @param source: HAL_DATAIN2_DFSDM2_PAD.
+  *                HAL_DATAIN2_DFSDM2_DATAIN3. 
+  *                HAL_DATAIN2_DFSDM1_PAD.
+  *                HAL_DATAIN2_DFSDM1_DATAIN3.                  
   * @retval None
   */
 void HAL_DFSDM_DataIn2_SourceSelection(uint32_t source)
 {
-  uint32_t tmp = 0U; 
+  uint32_t tmp = 0; 
 
   assert_param(IS_DFSDM_DATAIN2_SRC_SELECTION(source));
 
@@ -3364,7 +3348,7 @@ void HAL_DFSDM_DataIn2_SourceSelection(uint32_t source)
     tmp =  (tmp & ~SYSCFG_MCHDLYCR_DFSDM2D2SEL);
     if (source == HAL_DATAIN2_DFSDM2_PAD)
     {
-      source = 0x0000U;
+      source = 0x0000;
     }     
   }
   else
@@ -3376,13 +3360,13 @@ void HAL_DFSDM_DataIn2_SourceSelection(uint32_t source)
 
 /**
   * @brief  Select the source for DataIn4 signals for DFSDM2.
-  * @param source: DATAIN4_DFSDM2_PAD.
-  *                DATAIN4_DFSDM2_DATAIN5                
+  * @param source: HAL_DATAIN4_DFSDM2_PAD.
+  *                HAL_DATAIN4_DFSDM2_DATAIN5                
   * @retval None
   */
 void HAL_DFSDM_DataIn4_SourceSelection(uint32_t source)
 {
-  uint32_t tmp = 0U; 
+  uint32_t tmp = 0; 
 
   assert_param(IS_DFSDM_DATAIN4_SRC_SELECTION(source));
 
@@ -3394,13 +3378,13 @@ void HAL_DFSDM_DataIn4_SourceSelection(uint32_t source)
 
 /**
   * @brief  Select the source for DataIn6 signals for DFSDM2.
-  * @param source: DATAIN6_DFSDM2_PAD.
-  *                DATAIN6_DFSDM2_DATAIN7.                  
+  * @param source: HAL_DATAIN6_DFSDM2_PAD.
+  *                HAL_DATAIN6_DFSDM2_DATAIN7.                  
   * @retval None
   */
 void HAL_DFSDM_DataIn6_SourceSelection(uint32_t source)
 {
-  uint32_t tmp = 0U; 
+  uint32_t tmp = 0; 
 
   assert_param(IS_DFSDM_DATAIN6_SRC_SELECTION(source));
 
@@ -3414,25 +3398,31 @@ void HAL_DFSDM_DataIn6_SourceSelection(uint32_t source)
 /**
   * @brief  Configure the distribution of the bitstream clock gated from TIM4_OC 
   *         for DFSDM1 or TIM3_OC for DFSDM2 
-  * @param source: DFSDM1_CLKIN0_TIM4OC2
-  *                DFSDM1_CLKIN2_TIM4OC2
-  *                DFSDM1_CLKIN1_TIM4OC1
-  *                DFSDM1_CLKIN3_TIM4OC1
-  *                DFSDM2_CLKIN0_TIM3OC4
-  *                DFSDM2_CLKIN4_TIM3OC4
-  *                DFSDM2_CLKIN1_TIM3OC3
-  *                DFSDM2_CLKIN5_TIM3OC3
-  *                DFSDM2_CLKIN2_TIM3OC2
-  *                DFSDM2_CLKIN6_TIM3OC2
-  *                DFSDM2_CLKIN3_TIM3OC1
-  *                DFSDM2_CLKIN7_TIM3OC1
+  * @param source: HAL_DFSDM1_CLKIN0_TIM4OC2
+  *                HAL_DFSDM1_CLKIN2_TIM4OC2
+  *                HAL_DFSDM1_CLKIN1_TIM4OC1
+  *                HAL_DFSDM1_CLKIN3_TIM4OC1
+  *                HAL_DFSDM2_CLKIN0_TIM3OC4
+  *                HAL_DFSDM2_CLKIN4_TIM3OC4
+  *                HAL_DFSDM2_CLKIN1_TIM3OC3
+  *                HAL_DFSDM2_CLKIN5_TIM3OC3
+  *                HAL_DFSDM2_CLKIN2_TIM3OC2
+  *                HAL_DFSDM2_CLKIN6_TIM3OC2
+  *                HAL_DFSDM2_CLKIN3_TIM3OC1
+  *                HAL_DFSDM2_CLKIN7_TIM3OC1
   * @retval None
   */
 void HAL_DFSDM_BitStreamClkDistribution_Config(uint32_t source)
 {
-  uint32_t tmp = 0U; 
+  uint32_t tmp = 0; 
 
   assert_param(IS_DFSDM_BITSTREM_CLK_DISTRIBUTION(source));
+  if((source == HAL_DFSDM1_CLKIN0_TIM4OC2) ||(source == HAL_DFSDM1_CLKIN1_TIM4OC1)||
+     (source == HAL_DFSDM2_CLKIN0_TIM3OC4) ||(source == HAL_DFSDM2_CLKIN1_TIM3OC3)||
+     (source == HAL_DFSDM2_CLKIN2_TIM3OC2) ||(source == HAL_DFSDM2_CLKIN3_TIM3OC1))
+  {
+    source = 0x0000;
+  }
 
   tmp = SYSCFG->MCHDLYCR;
 
@@ -3460,53 +3450,10 @@ void HAL_DFSDM_BitStreamClkDistribution_Config(uint32_t source)
   {
     tmp =  (tmp & ~SYSCFG_MCHDLYCR_DFSDM2CK37SEL);
   }
-  
-  if((source == HAL_DFSDM1_CLKIN0_TIM4OC2) ||(source == HAL_DFSDM1_CLKIN1_TIM4OC1)||
-     (source == HAL_DFSDM2_CLKIN0_TIM3OC4) ||(source == HAL_DFSDM2_CLKIN1_TIM3OC3)||
-     (source == HAL_DFSDM2_CLKIN2_TIM3OC2) ||(source == HAL_DFSDM2_CLKIN3_TIM3OC1))
-  {
-    source = 0x0000U;
-  }
-  
+
   SYSCFG->MCHDLYCR = (source|tmp);
 }
 
-/**
-  * @brief  Configure multi channel delay block: Use DFSDM2 audio clock source as input 
-  *         clock for DFSDM1 and DFSDM2 filters to Synchronize DFSDMx filters.
-  *         Set the path of the DFSDM2 clock output (dfsdm2_ckout) to the
-  *         DFSDM1/2 CkInx and data inputs channels by configuring following MCHDLY muxes
-  *         or demuxes: M1, M2, M3, M4, M5, M6, M7, M8, DM1, DM2, DM3, DM4, DM5, DM6,
-  *         M9, M10, M11, M12, M13, M14, M15, M16, M17, M18, M19, M20 based on the
-  *         contains of the DFSDM_MultiChannelConfigTypeDef structure  
-  * @param  mchdlystruct: Structure of multi channel configuration
-  * @retval None
-  * @note   The SYSCFG clock marco __HAL_RCC_SYSCFG_CLK_ENABLE() must be called 
-  *         before HAL_DFSDM_ConfigMultiChannelDelay()
-  * @note   The HAL_DFSDM_ConfigMultiChannelDelay() function clears the SYSCFG-MCHDLYCR
-  *         register before setting the new configuration.           
-  */
-void HAL_DFSDM_ConfigMultiChannelDelay(DFSDM_MultiChannelConfigTypeDef* mchdlystruct)
-{ 
-  uint32_t mchdlyreg = 0U; 
-  
-  assert_param(IS_DFSDM_DFSDM1_CLKOUT(mchdlystruct->DFSDM1ClockOut));
-  assert_param(IS_DFSDM_DFSDM2_CLKOUT(mchdlystruct->DFSDM2ClockOut));
-  assert_param(IS_DFSDM_DFSDM1_CLKIN(mchdlystruct->DFSDM1ClockIn));
-  assert_param(IS_DFSDM_DFSDM2_CLKIN(mchdlystruct->DFSDM2ClockIn));
-  assert_param(IS_DFSDM_DFSDM1_BIT_CLK((mchdlystruct->DFSDM1BitClkDistribution)));
-  assert_param(IS_DFSDM_DFSDM2_BIT_CLK(mchdlystruct->DFSDM2BitClkDistribution));
-  assert_param(IS_DFSDM_DFSDM1_DATA_DISTRIBUTION(mchdlystruct->DFSDM1DataDistribution));
-  assert_param(IS_DFSDM_DFSDM2_DATA_DISTRIBUTION(mchdlystruct->DFSDM2DataDistribution));
-  
-  mchdlyreg = (SYSCFG->MCHDLYCR & 0x80103U);
-
-  SYSCFG->MCHDLYCR = (mchdlyreg |(mchdlystruct->DFSDM1ClockOut)|(mchdlystruct->DFSDM2ClockOut)|
-                     (mchdlystruct->DFSDM1ClockIn)|(mchdlystruct->DFSDM2ClockIn)|
-                     (mchdlystruct->DFSDM1BitClkDistribution)| (mchdlystruct->DFSDM2BitClkDistribution)|
-                     (mchdlystruct->DFSDM1DataDistribution)| (mchdlystruct->DFSDM2DataDistribution));
-
-}
 #endif /* SYSCFG_MCHDLYCR_BSCKSEL */
 /**
   * @}
@@ -3842,6 +3789,7 @@ static void DFSDM_InjConvStop(DFSDM_Filter_HandleTypeDef* hdfsdm_filter)
   hdfsdm_filter->State = (hdfsdm_filter->State == HAL_DFSDM_FILTER_STATE_INJ) ? \
                           HAL_DFSDM_FILTER_STATE_READY : HAL_DFSDM_FILTER_STATE_REG;
 }
+
 /**
   * @}
   */
