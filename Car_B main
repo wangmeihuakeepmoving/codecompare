@@ -166,6 +166,7 @@ int main(void)
 	//printf("main-%d --",yaw.thisAngle);
 	//printf("-%d \n",pitch.thisAngle);
 	HAL_UART_Receive_DMA(&huart1,dbus_buf,DBUS_BUF_SIZE);
+	//开启遥控器接受终中断
 					if(DBUS_Det(dbus))//rc开启判断
 			{
 				if(dbus.mouse.x>3){
