@@ -62,10 +62,10 @@
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
-uint8_t recv_end_flag=0;
+
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+uint8_t recv_end_flag=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -78,7 +78,6 @@ void Error_Handler(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-
 //重新定向printf()函数对应的串口
 #ifdef __GNUC__
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
@@ -90,13 +89,13 @@ PUTCHAR_PROTOTYPE
 HAL_UART_Transmit(&huart6 , (uint8_t *)&ch, 1, 0xFFFF);
 return ch;
 }
-
 /* USER CODE END 0 */
 
 int main(void)
 {
-  //printf("start!");
+
   /* USER CODE BEGIN 1 */
+
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -112,6 +111,7 @@ int main(void)
   MX_DMA_Init();
   MX_CAN1_Init();
   MX_CAN2_Init();
+  MX_I2C2_Init();
   MX_SPI5_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
@@ -124,10 +124,9 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
-  MX_I2C2_Init();
 
   /* USER CODE BEGIN 2 */
-	HAL_TIM_PWM_Start(&htim12, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim12, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim12, TIM_CHANNEL_2);
 	__HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE);
 	HAL_UART_Receive_IT(&huart3, uart3_rx_buff, 1);
@@ -145,15 +144,15 @@ int main(void)
 	Initialization();   	
 	delay_ms(2000);
   /* USER CODE END 2 */
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
   while (1)
   {
   /* USER CODE END WHILE */
-  
+
   /* USER CODE BEGIN 3 */
-	if(recv_end_flag ==1)
+  if(recv_end_flag ==1)
 	{
 //		printf("%d ",dbus.rc.ch0);
 //		printf("%d ",dbus.rc.ch1);
@@ -166,7 +165,7 @@ int main(void)
 	//printf("main-%d --",yaw.thisAngle);
 	//printf("-%d \n",pitch.thisAngle);
 	HAL_UART_Receive_DMA(&huart1,dbus_buf,DBUS_BUF_SIZE);
-					if(DBUS_Det(dbus))//rc开启判断
+			if(DBUS_Det(dbus))//rc开启判断
 			{
 				if(dbus.mouse.x>3){
 				dbus.rc.ch2=dbus.rc.ch2+20;
@@ -178,7 +177,7 @@ int main(void)
 			  BLDC_control(dbus.rc.s2, dbus.mouse.r);
 			  Fire(dbus.rc.s2,dbus.mouse.l);				
 			}
-	}
+  }
   /* USER CODE END 3 */
 
 }
