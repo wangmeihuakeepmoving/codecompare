@@ -39,6 +39,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32l0xx_hal.h"
+#include "adc.h"
 #include "spi.h"
 #include "usart.h"
 #include "gpio.h"
@@ -76,9 +77,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
   unsigned char* frame_buffer = (unsigned char*)malloc(EPD_WIDTH * EPD_HEIGHT / 8);
-  char time_string[] = {'0', '0', ':', '0', '0', '\0'};
-	unsigned long time_start_ms;
-  unsigned long time_now_s;
+	char time_string[] = {'0', '0', ':', '0', '0', '\0'};
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -101,14 +100,16 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_SPI1_Init();
+  MX_ADC_Init();
 
   /* USER CODE BEGIN 2 */
-  EPD epd;
+	EPD epd;
   if (EPD_Init(&epd, lut_full_update) != 0) {
     printf("e-Paper init failed\n");
     return -1;
   }
-	  Paint paint;
+  
+  Paint paint;
   Paint_Init(&paint, frame_buffer, epd.width, epd.height);
   Paint_Clear(&paint, UNCOLORED);
 
@@ -116,10 +117,15 @@ int main(void)
   /* Write strings to the buffer */
   Paint_DrawFilledRectangle(&paint, 0, 6, 200, 26, COLORED);
   Paint_DrawStringAt(&paint, 28, 10, "Hello world!", &Font16, UNCOLORED);
-  Paint_DrawStringAt(&paint, 30, 30, "SUSTech", &Font16, COLORED);
+  Paint_DrawStringAt(&paint, 30, 30, "e-Paper Demo", &Font16, COLORED);
 
   /* Draw something to the frame buffer */
-
+  Paint_DrawRectangle(&paint, 10, 60, 50, 110, COLORED);
+  Paint_DrawLine(&paint, 10, 60, 50, 110, COLORED);
+  Paint_DrawLine(&paint, 50, 60, 10, 110, COLORED);
+  Paint_DrawCircle(&paint, 120, 80, 30, COLORED);
+  Paint_DrawFilledRectangle(&paint, 10, 130, 50, 180, COLORED);
+  Paint_DrawFilledCircle(&paint, 120, 150, 30, COLORED);
   
   /* Display the frame_buffer */
   EPD_SetFrameMemory(&epd, frame_buffer, 0, 0, Paint_GetWidth(&paint), Paint_GetHeight(&paint));
@@ -136,12 +142,15 @@ int main(void)
     *  i.e. the next action of SetFrameMemory will set the other memory area
     *  therefore you have to set the frame memory and refresh the display twice.
     */
-  EPD_SetFrameMemory(&epd, IMAGE_DATA, 0, 0, epd.width, epd.height);
+  EPD_SetFrameMemory(&epd, MAIN_DATA, 0, 0, epd.width, epd.height);
   EPD_DisplayFrame(&epd);
-  EPD_SetFrameMemory(&epd, IMAGE_DATA, 0, 0, epd.width, epd.height);
+  EPD_SetFrameMemory(&epd, MAIN_DATA, 0, 0, epd.width, epd.height);
   EPD_DisplayFrame(&epd);
-
-  time_start_ms = HAL_GetTick();
+  
+	EPD_SetFrameMemory(&epd, MAIN_DATA, 150, 150, epd.width, epd.height);
+  EPD_DisplayFrame(&epd);
+  EPD_SetFrameMemory(&epd, MAIN_DATA, 150, 150, epd.width, epd.height);
+  EPD_DisplayFrame(&epd);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -151,12 +160,15 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-    time_now_s = (HAL_GetTick() - time_start_ms) / 1000;
-    time_string[0] = time_now_s / 60 / 10 + '0';
+    /*time_string[0] = time_now_s / 60 / 10 + '0';
     time_string[1] = time_now_s / 60 % 10 + '0';
     time_string[3] = time_now_s % 60 / 10 + '0';
     time_string[4] = time_now_s % 60 % 10 + '0';
-
+    */
+		time_string[0] = '1';
+    time_string[1] = '2';
+    time_string[3] = '3';
+    time_string[4] = '4';
     Paint_SetWidth(&paint, 32);
     Paint_SetHeight(&paint, 96);
     Paint_SetRotate(&paint, ROTATE_270);
